@@ -12,10 +12,26 @@ He plans on using these insights to help him decide whether he should expand the
 Danny has provided you with a sample of his overall customer data due to privacy issues - but he hopes that these examples are enough for you to write fully functioning SQL queries to help him answer his questions!
 
 Danny has shared with you 3 key datasets for this case study:
-+ sales
-+ menu
-+ members
++ **sales**
++ **menu**
++ **members**
 
 You can inspect the entity relationship diagram and example data below.
 
 ## Entity Relationshop Diagram
+![Danny's Diner](https://github.com/Geomatric15/SQL-Weekly-Challenge/assets/167914482/0ac9dc03-b062-4cf5-a602-e1444e36650e)
+
+## Case Study Questions
+> [!NOTE]
+> These questions were answered using postgreSQL
+
+1.) What is the total amount each customer spent at the restaurant?
+```
+SELECT s.customer_id AS customer
+       SUM(menu.price) AS total_spent
+FROM sales
+INNER JOIN menu
+USING(product_id)
+GROUP BY sales.customer_id;
+```
+
