@@ -25,42 +25,61 @@ You can inspect the entity relationship diagram and example data below.
 > [!NOTE]
 > These questions were answered using postgreSQL
 
-1.) What is the total amount each customer spent at the restaurant?
+#### 1.) What is the total amount each customer spent at the restaurant?
 ```sql
-SELECT s.customer_id AS customer
+SELECT sales.customer_id AS customer,
        SUM(menu.price) AS total_spent
 FROM sales
 INNER JOIN menu USING(product_id)
 GROUP BY sales.customer_id;
 ```
-2.) How many days has each customer visited the restaurant?
+**Output:**
+| customer | total_spent |
+| -------- | ----------- |
+| B        |          74 |
+| C        |          36 |
+| A        |          76 |
+
+#### 2.) How many days has each customer visited the restaurant?
 ```sql
-SELECT customer_id AS customer
+SELECT customer_id AS customer,
        COUNT(DISTINCT order_date) AS total_visit
 FROM sales
 GROUP BY customer_id;
 ```
+**Output:**
+| customer | total_visit |
+| -------- | ----------- |
+| A        |           4 |
+| B        |           6 |
+| C        |           2 |
 
-3.) What was the first item from the menu purchased by each customer?
+#### 3.) What was the first item from the menu purchased by each customer?
 ```sql
-SELECT sales.customer_id AS customer
-       MIN(menu.product_name) AS product
+SELECT sales.customer_id AS customer,
+       MIN(menu.product_name) AS product,
        MIN(sales.order_date) AS first_order_date
 FROM sales
 INNER JOIN menu USING(product_id)
 GROUP BY customer_id;
 ```
+**Output:**
+| customer | product | first_order_date | 
+| -------- | ------- | ---------------- |
+| B        | curry   | 2021-01-01       |      
+| C        | ramen   | 2021-01-01       |     
+| A        | curry   | 2021-01-01       |      
 
-4.) What is the most purchased item on the menu and how many times was it purchased by all customers?
+#### 4.) What is the most purchased item on the menu and how many times was it purchased by all customers?
 ```sql
-SELECT sales.customer_id AS customer
-       menu.product_name AS item
+SELECT sales.customer_id AS customer,
+       menu.product_name AS item,
        COUNT(menu.product_name) AS no_of_order
 FROM sales
 INNER JOIN menu USING(product_id)
 WHERE sales.product_id IN (SELECT product
                            FROM (
-                                 SELECT product_id AS product
+                                 SELECT product_id AS product,
                                         COUNT(product_id) AS count
                                  FROM sales
                                  GROUP BY product_id
@@ -70,14 +89,20 @@ WHERE sales.product_id IN (SELECT product
                            )
 GROUP BY sales.customer_id, menu.product_name;
 ```
+**Output:**
+| customer | item | no_of_order |
+| --- | --- | --- |
+| B | ramen | 2 |
+| A | ramen | 3 |
+| C | ramen | 3 |
 
-5.) Which item was the most popular for each customer?
+#### 5.) Which item was the most popular for each customer?
 ```sql
 SELECT customer,
        item
 FROM (
-      SELECT sales.customer_id AS customer
-             menu.product_name AS item
+      SELECT sales.customer_id AS customer,
+             menu.product_name AS item,
              DENSE_RANK() OVER(PARTITION BY sales.customer_id ORDER BY COUNT(sales.product_id) DESC) AS rank
       FROM sales
       INNER JOIN menu USING(product_id)
@@ -85,8 +110,16 @@ FROM (
       )
 WHERE rank = 1;
 ```
+**Output:**
+| customer | item |
+| --- | --- |
+| A | ramen |
+| B | sushi |
+| B | curry |
+| B | ramen |
+| C | ramen |
 
-6.) Which item was purchased first by the customer after they became a member?
+#### 6.) Which item was purchased first by the customer after they became a member?
 ```sql
 SELECT sales.customer_id AS customer,
        MIN(menu.product_name) AS item,
@@ -98,6 +131,11 @@ LEFT JOIN members USING(customer_id)
 WHERE members.join_date <= sales.order_date
 GROUP BY sales.customer_id, members.join_date;
 ```
+**Output:**
+| customer | item | order_date | join_date |
+| --- | --- | --- | --- |
+| A | curry | 2021-01-07 | 2021-01-07 |
+| B | ramen | 2021-01-11 | 2021-01-09 |
 
 7.) Which item was purchased just before the customer became a member?
 ```sql
@@ -158,9 +196,9 @@ A.) Join All The Things
 ```sql
 SELECT sales.customer_id AS customer,
        sales.order_date AS order_date,
-	menu.product_name AS prodoct_name,
-	menu.price AS price,
-	CASE WHEN members.join_date <= sales.order_date THEN 'Y' ELSE 'N' END AS member
+       menu.product_name AS prodoct_name,
+       menu.price AS price,
+       CASE WHEN members.join_date <= sales.order_date THEN 'Y' ELSE 'N' END AS member
 FROM sales
 INNER JOIN menu USING(product_id)
 LEFT JOIN members USING(customer_id)
