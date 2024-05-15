@@ -26,12 +26,129 @@ You can inspect the entity relationship diagram and example data below.
 > These questions were answered using postgreSQL
 
 1.) What is the total amount each customer spent at the restaurant?
-```
+```sql
 SELECT s.customer_id AS customer
        SUM(menu.price) AS total_spent
 FROM sales
-INNER JOIN menu
-USING(product_id)
+INNER JOIN menu USING(product_id)
 GROUP BY sales.customer_id;
+```
+2.) How many days has each customer visited the restaurant?
+```sql
+SELECT customer_id AS customer
+       COUNT(DISTINCT order_date) AS total_visit
+FROM sales
+GROUP BY customer_id;
+```
+
+3.) What was the first item from the menu purchased by each customer?
+```sql
+SELECT sales.customer_id AS customer
+       MIN(menu.product_name) AS product
+       MIN(sales.order_date) AS first_order_date
+FROM sales
+INNER JOIN menu USING(product_id)
+GROUP BY customer_id;
+```
+
+4.) What is the most purchased item on the menu and how many times was it purchased by all customers?
+```sql
+SELECT sales.customer_id AS customer
+       menu.product_name AS item
+       COUNT(menu.product_name) AS no_of_order
+FROM sales
+INNER JOIN menu USING(product_id)
+WHERE sales.product_id IN (SELECT product
+                           FROM (
+                                 SELECT product_id AS product
+                                        COUNT(product_id) AS count
+                                 FROM sales
+                                 GROUP BY product_id
+                                 ORDER BY count DESC
+                                 LIMIT 1
+                                ) AS top_product  
+                           )
+GROUP BY sales.customer_id, menu.product_name;
+```
+
+5.) Which item was the most popular for each customer?
+```sql
+SELECT customer,
+       item
+FROM (
+      SELECT sales.customer_id AS customer
+             menu.product_name AS item
+             DENSE_RANK() OVER(PARTITION BY sales.customer_id ORDER BY COUNT(sales.product_id) DESC) AS rank
+      FROM sales
+      INNER JOIN menu USING(product_id)
+      GROUP BY sales.customer_id, menu.product_name
+      )
+WHERE rank = 1;
+```
+
+6.) Which item was purchased first by the customer after they became a member?
+```sql
+SELECT sales.customer_id AS customer,
+       MIN(menu.product_name) AS item,
+       MIN(order_date) AS order_date,
+	   members.join_date AS join_date
+FROM sales
+INNER JOIN menu USING(product_id)
+LEFT JOIN members USING(customer_id)
+WHERE members.join_date <= sales.order_date
+GROUP BY sales.customer_id, members.join_date;
+```
+
+7.) Which item was purchased just before the customer became a member?
+```sql
+SELECT sales.customer_id AS customer,
+       MAX(menu.product_name) AS item,
+       MAX(order_date) AS order_date,
+	   members.join_date AS join_date
+FROM sales
+INNER JOIN menu USING(product_id)
+LEFT JOIN members USING(customer_id)
+WHERE members.join_date > sales.order_date
+GROUP BY sales.customer_id, members.join_date;
+```
+
+8.) What is the total items and amount spent for each member before they became a member?
+```sql
+SELECT sales.customer_id AS customer,
+       SUM(menu.price) AS total_spent
+FROM sales
+INNER JOIN menu USING(product_id)
+LEFT JOIN members USING(customer_id)
+WHERE members.join_date > sales.order_date
+GROUP BY sales.customer_id;
+```
+
+9.) If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
+```sql
+SELECT customer,
+       SUM(price * 10 * multiplier) AS total_points
+FROM (
+      SELECT sales.customer_id AS customer,
+              menu.price AS price,
+              CASE WHEN menu.product_name = 'sushi' THEN 2 ELSE 1 END AS multiplier
+       FROM sales
+       INNER JOIN menu USING(product_id) 
+      )
+GROUP BY customer;
+```
+
+10.) In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
+```sql
+SELECT members.customer_id AS customer,
+       SUM(CASE WHEN menu.product_name = 'sushi' 
+		    OR sales.order_date BETWEEN members.join_date 
+                                          AND members.join_date + integer'6' 
+		  THEN menu.price * 10 * 2 
+		  ELSE menu.price * 10 END) AS points
+FROM sales
+INNER JOIN menu USING(product_id)
+INNER JOIN members USING(customer_id)
+WHERE DATE_PART('month', order_date) = 1
+GROUP BY members.customer_id;
 ```
 
