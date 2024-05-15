@@ -137,7 +137,7 @@ GROUP BY sales.customer_id, members.join_date;
 | A | curry | 2021-01-07 | 2021-01-07 |
 | B | ramen | 2021-01-11 | 2021-01-09 |
 
-7.) Which item was purchased just before the customer became a member?
+#### 7.) Which item was purchased just before the customer became a member?
 ```sql
 SELECT sales.customer_id AS customer,
        MAX(menu.product_name) AS item,
@@ -149,8 +149,13 @@ LEFT JOIN members USING(customer_id)
 WHERE members.join_date > sales.order_date
 GROUP BY sales.customer_id, members.join_date;
 ```
+**Output:**
+| customer | item | order_date | join_date |
+| --- | --- | --- | --- |
+| A | sushi | 2021-01-01 | 2021-01-07 |
+| B | sushi | 2021-01-04 | 2021-01-09 |
 
-8.) What is the total items and amount spent for each member before they became a member?
+#### 8.) What is the total items and amount spent for each member before they became a member?
 ```sql
 SELECT sales.customer_id AS customer,
        SUM(menu.price) AS total_spent
@@ -160,8 +165,13 @@ LEFT JOIN members USING(customer_id)
 WHERE members.join_date > sales.order_date
 GROUP BY sales.customer_id;
 ```
+**Output:**
+| customer | total_spent |
+| --- | --- |
+| B | 40 |
+| A | 25 |
 
-9.) If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
+#### 9.) If each $1 spent equates to 10 points and sushi has a 2x points multiplier - how many points would each customer have?
 ```sql
 SELECT customer,
        SUM(price * 10 * multiplier) AS total_points
@@ -174,8 +184,14 @@ FROM (
       )
 GROUP BY customer;
 ```
+**Output:**
+| customer | total_points |
+| --- | --- |
+| B | 940 |
+| C | 360 |
+| A | 860 |
 
-10.) In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
+#### 10.) In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi - how many points do customer A and B have at the end of January?
 ```sql
 SELECT members.customer_id AS customer,
        SUM(CASE WHEN menu.product_name = 'sushi' 
@@ -189,10 +205,15 @@ INNER JOIN members USING(customer_id)
 WHERE DATE_PART('month', order_date) = 1
 GROUP BY members.customer_id;
 ```
+**Output:**
+| customer | points |
+| --- | --- |
+| B | 820 |
+| A | 1370 | 
 
 ## Bonus Questions
 
-A.) Join All The Things
+#### A.) Join All The Things
 ```sql
 SELECT sales.customer_id AS customer,
        sales.order_date AS order_date,
@@ -202,17 +223,35 @@ SELECT sales.customer_id AS customer,
 FROM sales
 INNER JOIN menu USING(product_id)
 LEFT JOIN members USING(customer_id)
-ORDER BY customer;
+ORDER BY customer, order_date;
 ```
+**Output:**
+ customer | order_date | prodoct_name | price | member
+| --- | --- | --- | --- | --- |
+ A        | 2021-01-01 | sushi        |    10 | N
+ A        | 2021-01-01 | curry        |    15 | N
+ A        | 2021-01-07 | curry        |    15 | Y
+ A        | 2021-01-10 | ramen        |    12 | Y
+ A        | 2021-01-11 | ramen        |    12 | Y
+ A        | 2021-01-11 | ramen        |    12 | Y
+ B        | 2021-01-01 | curry        |    15 | N
+ B        | 2021-01-02 | curry        |    15 | N
+ B        | 2021-01-04 | sushi        |    10 | N
+ B        | 2021-01-11 | sushi        |    10 | Y
+ B        | 2021-01-16 | ramen        |    12 | Y
+ B        | 2021-02-01 | ramen        |    12 | Y
+ C        | 2021-01-01 | ramen        |    12 | N
+ C        | 2021-01-01 | ramen        |    12 | N
+ C        | 2021-01-07 | ramen        |    12 | N
 
-B.) Rank All The Things
+#### B.) Rank All The Things
 ```sql
 WITH temporary_table AS (
 	SELECT sales.customer_id AS customer,
 	       sales.order_date AS order_date,
-		   menu.product_name AS prodoct_name,
-		   menu.price AS price,
-		   CASE WHEN members.join_date <= sales.order_date THEN 'Y' ELSE 'N' END AS member
+               menu.product_name AS prodoct_name,
+               menu.price AS price,
+               CASE WHEN members.join_date <= sales.order_date THEN 'Y' ELSE 'N' END AS member
 	FROM sales
 	INNER JOIN menu USING(product_id)
 	LEFT JOIN members USING(customer_id)
@@ -221,7 +260,25 @@ WITH temporary_table AS (
 
 SELECT *,
       CASE WHEN member = 'N' THEN NULL
-	  ELSE RANK() OVER(PARTITION BY customer, member ORDER BY order_date) END AS rank
+	   ELSE RANK() OVER(PARTITION BY customer, member ORDER BY order_date) END AS rank
 FROM temporary_table;
 ```
+**Output:**
+customer | order_date | prodoct_name | price | member | rank
+| --- | --- | --- | --- | --- | --- |
+ A        | 2021-01-01 | sushi        |    10 | N      |
+ A        | 2021-01-01 | curry        |    15 | N      |
+ A        | 2021-01-07 | curry        |    15 | Y      |    1
+ A        | 2021-01-10 | ramen        |    12 | Y      |    2
+ A        | 2021-01-11 | ramen        |    12 | Y      |    3
+ A        | 2021-01-11 | ramen        |    12 | Y      |    3
+ B        | 2021-01-01 | curry        |    15 | N      |
+ B        | 2021-01-02 | curry        |    15 | N      |
+ B        | 2021-01-04 | sushi        |    10 | N      |
+ B        | 2021-01-11 | sushi        |    10 | Y      |    1
+ B        | 2021-01-16 | ramen        |    12 | Y      |    2
+ B        | 2021-02-01 | ramen        |    12 | Y      |    3
+ C        | 2021-01-01 | ramen        |    12 | N      |
+ C        | 2021-01-01 | ramen        |    12 | N      |
+ C        | 2021-01-07 | ramen        |    12 | N      |
 
