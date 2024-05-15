@@ -170,16 +170,17 @@ ORDER BY customer;
 B.) Rank All The Things
 ```sql
 WITH temporary_table AS (
-SELECT sales.customer_id AS customer,
-       sales.order_date AS order_date,
-	   menu.product_name AS prodoct_name,
-	   menu.price AS price,
-	   CASE WHEN members.join_date <= sales.order_date THEN 'Y' ELSE 'N' END AS member
-FROM sales
-INNER JOIN menu USING(product_id)
-LEFT JOIN members USING(customer_id)
-ORDER BY sales.customer_id, sales.order_date
-	                     )
+	SELECT sales.customer_id AS customer,
+	       sales.order_date AS order_date,
+		   menu.product_name AS prodoct_name,
+		   menu.price AS price,
+		   CASE WHEN members.join_date <= sales.order_date THEN 'Y' ELSE 'N' END AS member
+	FROM sales
+	INNER JOIN menu USING(product_id)
+	LEFT JOIN members USING(customer_id)
+	ORDER BY sales.customer_id, sales.order_date
+)
+
 SELECT *,
       CASE WHEN member = 'N' THEN NULL
 	  ELSE RANK() OVER(PARTITION BY customer, member ORDER BY order_date) END AS rank
