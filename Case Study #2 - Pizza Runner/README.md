@@ -28,17 +28,16 @@ CREATE TEMP TABLE runner_orders_temp AS
 SELECT order_id,
        runner_id,
        CASE WHEN pickup_time LIKE 'null' THEN NULL
-	          ELSE pickup_time END AS pickup_time,
-	     CASE WHEN distance LIKE '%km' THEN TRIM('km' FROM distance)
-	          WHEN distance LIKE 'null' THEN NULL 
-			      ELSE distance END AS distance,
-	     CASE WHEN duration LIKE '%minutes' THEN TRIM('minutes' FROM duration)
-            WHEN duration LIKE '%mins' THEN TRIM('mins' FROM duration)
-			      WHEN duration LIKE '%minute' THEN TRIM('minute' FROM duration)
-			      WHEN duration LIKE 'null' THEN NULL
-			      ELSE duration END AS duration,
+            ELSE pickup_time END AS pickup_time,
+       CASE WHEN distance LIKE '%km' THEN TRIM('km' FROM distance)
+            WHEN distance LIKE 'null' THEN NULL 
+            ELSE distance END AS distance,
+       CASE WHEN duration LIKE '%minutes' THEN TRIM('minutes' FROM duration)
+            WHEN duration LIKE '%mins' THEN TRIM('mins' FROM duration)                                  			    WHEN duration LIKE '%minute' THEN TRIM('minute' FROM duration)
+            WHEN duration LIKE 'null' THEN NULL
+            ELSE duration END AS duration,
        CASE WHEN cancellation LIKE 'null' THEN NULL
-	          WHEN cancellation LIKE '' THEN NULL
+            WHEN cancellation LIKE '' THEN NULL
             ELSE cancellation END AS cancellation
 FROM runner_orders;
 
@@ -55,12 +54,12 @@ SELECT order_id,
        customer_id,
        pizza_id,
        CASE WHEN exclusion LIKE 'null' THEN NULL
-	          WHEN exclusion LIKE '' THEN NULL
-	          ELSE exclusion END AS exclusion,
-	     CASE WHEN extras LIKE 'null' THEN NULL
-	          WHEN extras LIKE '' THEN NULL
-	          ELSE extras END AS extras,
-	     order_time
+            WHEN exclusion LIKE '' THEN NULL
+            ELSE exclusion END AS exclusion,
+       CASE WHEN extras LIKE 'null' THEN NULL
+            WHEN extras LIKE '' THEN NULL
+            ELSE extras END AS extras,
+       order_time
 FROM customer_orders;
 ```
 
