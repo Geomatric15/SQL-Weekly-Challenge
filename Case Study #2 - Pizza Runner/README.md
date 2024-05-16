@@ -33,7 +33,8 @@ SELECT order_id,
             WHEN distance LIKE 'null' THEN NULL 
             ELSE distance END AS distance,
        CASE WHEN duration LIKE '%minutes' THEN TRIM('minutes' FROM duration)
-            WHEN duration LIKE '%mins' THEN TRIM('mins' FROM duration)                                  			    WHEN duration LIKE '%minute' THEN TRIM('minute' FROM duration)
+            WHEN duration LIKE '%mins' THEN TRIM('mins' FROM duration)                                  			    
+            WHEN duration LIKE '%minute' THEN TRIM('minute' FROM duration)
             WHEN duration LIKE 'null' THEN NULL
             ELSE duration END AS duration,
        CASE WHEN cancellation LIKE 'null' THEN NULL
@@ -64,5 +65,111 @@ FROM customer_orders;
 ```
 
 ### A. Pizza Metrics
+#### 1.) How many pizzas were ordered?
+```sql
+SELECT COUNT(pizza_id) AS pizza_ordered
+FROM customer_orders_temp;
+```
+**Output:**
 
+#### 2.) How many unique customer orders were made?
+```sql
+SELECT COUNT(DISTINCT order_id) AS unique_ordered
+FROM customer_orders_temp;
+```
+**Output:**
+
+#### 3.) How many successful orders were delivered by each runner?
+```sql
+SELECT runner_id,
+       COUNT(order_id) AS delivered_count
+FROM runner_orders_temp
+WHERE distance IS NOT NULL
+GROUP BY runner_id;
+```
+**Output:**
+
+#### 4.) How many of each type of pizza was delivered?
+```sql
+SELECT CDT.pizza_id,
+       COUNT(CDT.pizza_id) AS delivered_count
+FROM customer_orders_temp CDT
+INNER JOIN runner_orders_temp ROT
+USING(order_id)
+WHERE cancellation IS NULL
+GROUP BY CDT.pizza_id;
+```
+**Output:**
+
+#### 5.) How many Vegetarian and Meatlovers were ordered by each customer?
+```sql
+SELECT customer_id,
+       pizza_id,
+       COUNT(pizza_id) AS ordered_count
+FROM customer_orders_temp
+GROUP BY customer_id, pizza_id
+ORDER BY customer_id;
+```
+**Output:**
+
+#### 6.) What was the maximum number of pizzas delivered in a single order?
+```sql
+SELECT order_id,
+       COUNT(pizza_id) AS total
+FROM customer_orders_temp COT
+INNER JOIN runner_orders_temp ROT
+USING(order_id)
+WHERE cancellation IS NULL
+GROUP BY order_id
+ORDER BY total DESC
+LIMIT 1;
+```
+**Output:**
+
+#### 7.) For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
+```sql
+SELECT customer_id,
+       SUM(CASE WHEN exclusion IS NULL
+                 AND extras IS NULL THEN 1 END) AS non_changes,
+       SUM(CASE WHEN exclusion IS NOT NULL 
+                  OR extras IS NOT NULL THEN 1 END) AS changes
+FROM customer_orders_temp
+INNER JOIN runner_orders_temp
+USING(order_id)
+WHERE cancellation IS NULL
+GROUP BY customer_id;
+```
+**Output:**
+
+#### 8.) How many pizzas were delivered that had both exclusions and extras?
+```sql
+SELECT COUNT(*) delivered_pizza_with_both_changes
+FROM customer_orders_temp
+INNER JOIN runner_orders_temp
+USING(order_id)
+WHERE cancellation IS NULL 
+  AND exclusion IS NOT NULL
+  AND extras IS NOT NULL;
+```
+**Output:**
+
+#### 9.) What was the total volume of pizzas ordered for each hour of the day?
+```sql
+SELECT COUNT(*) no_of_orders,
+       EXTRACT(HOUR FROM order_time) AS hour
+FROM customer_orders_temp
+GROUP BY hour
+ORDER BY hour ASC;
+```
+**Output:**
+
+#### 10.) What was the volume of orders for each day of the week?
+```sql
+SELECT COUNT(*) no_of_orders,
+       EXTRACT(DOW FROM order_time) AS day_of_week
+FROM customer_orders_temp
+GROUP BY day_of_week
+ORDER BY day_of_week;
+```
+**Output:**
 
