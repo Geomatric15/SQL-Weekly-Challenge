@@ -73,6 +73,9 @@ SELECT COUNT(pizza_id) AS pizza_ordered
 FROM customer_orders_temp;
 ```
 **Output:**
+| pizza_ordered |
+| --- |
+| 14 |
 
 #### 2.) How many unique customer orders were made?
 ```sql
@@ -80,6 +83,9 @@ SELECT COUNT(DISTINCT order_id) AS unique_ordered
 FROM customer_orders_temp;
 ```
 **Output:**
+| unique_ordered |
+| --- |
+| 10 |
 
 #### 3.) How many successful orders were delivered by each runner?
 ```sql
@@ -90,6 +96,11 @@ WHERE distance IS NOT NULL
 GROUP BY runner_id;
 ```
 **Output:**
+| runner_id | delivered_count |
+| --- | --- |
+| 3 | 1 |
+| 2 | 3 |
+| 1 | 4 |
 
 #### 4.) How many of each type of pizza was delivered?
 ```sql
@@ -102,6 +113,10 @@ WHERE cancellation IS NULL
 GROUP BY CDT.pizza_id;
 ```
 **Output:**
+| pizza_id | delivered_count |
+| --- | --- |
+| 1 | 9 |
+| 2 | 3 |
 
 #### 5.) How many Vegetarian and Meatlovers were ordered by each customer?
 ```sql
@@ -113,6 +128,16 @@ GROUP BY customer_id, pizza_id
 ORDER BY customer_id;
 ```
 **Output:**
+ customer_id | pizza_id | ordered_count
+| --- | --- | --- |
+| 101 | 2 | 1 |
+| 101 | 1 | 2 |
+| 102 | 2 | 1 |
+| 102 | 1 | 2 |
+| 103 | 2 | 1 |
+| 103 | 1 | 3 |
+| 104 | 1 | 3 |
+| 105 | 2 | 1 |
 
 #### 6.) What was the maximum number of pizzas delivered in a single order?
 ```sql
@@ -127,6 +152,9 @@ ORDER BY total DESC
 LIMIT 1;
 ```
 **Output:**
+ order_id | total
+| --- | --- |
+| 4 | 3 |
 
 #### 7.) For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
 ```sql
@@ -142,6 +170,13 @@ WHERE cancellation IS NULL
 GROUP BY customer_id;
 ```
 **Output:**
+ customer_id | non_changes | changes
+| --- | --- | --- |
+| 101 | 2 |   |
+| 102 | 3 |   |
+| 103 |   | 3 |
+| 104 | 1 | 2 |
+| 105 |   | 1 |
 
 #### 8.) How many pizzas were delivered that had both exclusions and extras?
 ```sql
@@ -154,6 +189,9 @@ WHERE cancellation IS NULL
   AND extras IS NOT NULL;
 ```
 **Output:**
+ | delivered_pizza_with_both_changes |
+| --- |
+| 1 |
 
 #### 9.) What was the total volume of pizzas ordered for each hour of the day?
 ```sql
@@ -164,6 +202,14 @@ GROUP BY hour
 ORDER BY hour ASC;
 ```
 **Output:**
+| no_of_orders | hour |
+| --- | --- |
+| 1 | 11 | 
+| 3 | 13 | 
+| 3 | 18 | 
+| 1 | 19 |
+| 3 | 21 |
+| 3 | 23 |
 
 #### 10.) What was the volume of orders for each day of the week?
 ```sql
@@ -174,4 +220,9 @@ GROUP BY day_of_week
 ORDER BY day_of_week;
 ```
 **Output:**
-
+| no_of_orders | day_of_week |
+| --- | --- |
+| 5 | 3 |
+| 3 | 4 |
+| 1 | 5 |
+| 5 | 6 |
