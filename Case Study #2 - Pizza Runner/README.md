@@ -1,4 +1,6 @@
 # Case Study #2 - Pizza Runner
+![2](https://github.com/Geomatric15/SQL-Weekly-Challenge/assets/167914482/b63015c8-9fa3-4282-a081-c40579a4232f)
+
 ## Introduction
 Did you know that over **115 million kilograms** of pizza is consumed daily worldwide??? (Well according to Wikipedia anyway…)
 
