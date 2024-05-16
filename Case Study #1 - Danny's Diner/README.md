@@ -1,4 +1,6 @@
 # Case Study #1 -  Danny's Diner
+![1](https://github.com/Geomatric15/SQL-Weekly-Challenge/assets/167914482/8cde3b2d-1329-4cb3-b752-008979151f6f)
+
 ## Introduction
 Danny seriously loves Japanese food so in the beginning of 2021, he decides to embark upon a risky venture and opens up a cute little restaurant that sells his 3 favourite foods: sushi, curry and ramen.
 
