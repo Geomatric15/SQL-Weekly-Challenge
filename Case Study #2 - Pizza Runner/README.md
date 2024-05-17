@@ -279,8 +279,15 @@ $~$
 SELECT EXTRACT(WEEK FROM registration_date) AS week,
        COUNT(runner_id) AS runner_joined
 FROM runners
-GROUP BY week;
+GROUP BY week
+ORDER BY runner_joined DESC;
 ```
+**Output:**
+| week | runner_joined |
+| --- | --- |
+|   53 |             2 |
+|    1 |             1 |
+|    2 |             1 |
 
 #### 2.) What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
 ```sql
@@ -293,6 +300,10 @@ FROM (
 	USING(order_id)
 	WHERE cancellation IS NULL);
 ```
+**Output:**
+| average_time |
+| --- |
+| 16 |
 
 #### 3.) Is there any relationship between the number of pizzas and how long the order takes to prepare?
 ```sql
@@ -310,6 +321,12 @@ FROM (
 GROUP BY number_ordered
 ORDER BY number_ordered;
 ```
+**Output:**
+ number_ordered | round
+| --- | --- |
+| 1 |    12 |
+| 2 |    18 |
+| 3 |    29 |
 
 #### 4.) What was the average distance travelled for each customer?
 ```sql
@@ -321,6 +338,14 @@ USING(order_id)
 WHERE cancellation IS NULL
 GROUP BY customer_id;
 ```
+**Output:**
+ customer_id | avg_distance_travelled
+| --- | --- |
+| 101 | 20.00 |
+| 102 | 16.73 |
+| 103 | 23.40 |
+| 104 | 10.00 |
+| 105 | 25.00 |
 
 #### 5.) What was the difference between the longest and shortest delivery times for all orders?
 ```sql
@@ -330,6 +355,10 @@ INNER JOIN runner_orders_temp
 USING(order_id)
 WHERE cancellation IS NULL;
 ```
+**Ouput:**
+| time_difference |
+| --- |
+| 30 |
 
 #### 6.) What was the average speed for each runner for each delivery and do you notice any trend for these values?
 ```sql
@@ -338,6 +367,12 @@ FROM runner_orders_temp
 WHERE cancellation IS NULL
 GROUP BY runner_id;
 ```
+**Output"**
+ runner_id | distance | duration
+| --- | --- | --- |
+| 1 | 15.85 | 22.25 |
+| 2 | 23.93 | 26.67 |
+| 3 | 10.00 | 15.00 |
 
 #### 7.) What is the successful delivery percentage for each runner?
 ```sql
@@ -347,4 +382,187 @@ SELECT runner_id,
 FROM runner_orders_temp
 GROUP BY runner_id;
 ```
+**Ouput:**
+ runner_id | successful_delivery_percentage
+| --- | --- |
+| 3 | 50.00 |
+| 2 | 75.00 |
+| 1 | 100.00 |
+
+$-$
+
+### C. Ingredient Optimisation
+
+#### 1.) What are the standard ingredients for each pizza?
+```sql
+SELECT pizza_name AS pizza_type,
+       STRING_AGG(topping_name, ', ') AS ingredients
+FROM (
+    SELECT pizza_id, 
+        CAST(REGEXP_SPLIT_TO_TABLE(toppings, E',') AS INT) AS toppings
+    FROM pizza_recipes
+      ) PR
+INNER JOIN pizza_names PN 
+ ON PR.pizza_id = PN.pizza_id
+INNER JOIN pizza_toppings PT
+ on PR.toppings = PT.topping_id
+GROUP BY pizza_name;
+```
+
+#### 2.) What was the most commonly added extra?
+```sql
+SELECT topping_name,
+       COUNT(topping_name) AS times_added
+FROM (
+    SELECT CAST(REGEXP_SPLIT_TO_TABLE(extras, E',') AS INT) AS extras
+    FROM customer_orders_temp) COT
+INNER JOIN pizza_toppings PT
+ ON COT.extras = PT.topping_id
+GROUP BY topping_name
+ORDER BY times_added DESC
+LIMIT 1;
+```
+#### 3.) What was the most common exclusion?
+```sql
+SELECT topping_name,
+       COUNT(topping_name) AS times_added
+FROM (
+    SELECT CAST(REGEXP_SPLIT_TO_TABLE(exclusion, E',') AS INT) AS exclusion
+    FROM customer_orders_temp) COT
+INNER JOIN pizza_toppings PT
+ ON COT.exclusion = PT.topping_id
+GROUP BY topping_name
+ORDER BY times_added DESC
+LIMIT 1;
+```
+
+> [!NOTE]
+> We will create a new table for the next following questions.
+**Creating new table: customer_orders_customized**
+```sql
+CREATE TEMP TABLE customer_orders_customized AS
+SELECT order_id,
+       customer_id,
+       pizza_id,
+	   CASE WHEN exclusion LIKE 'null'
+	          OR exclusion LIKE '' THEN NULL
+			ELSE exclusion END AS exclusion,
+	   CASE WHEN extras LIKE 'null' 
+	          OR extras LIKE '' THEN NULL
+			ELSE extras END AS extras,
+	   order_time
+FROM (
+SELECT order_id,
+       customer_id,
+	   pizza_id,
+       REGEXP_SPLIT_TO_TABLE(exclusion, E',') AS exclusion,
+       REGEXP_SPLIT_TO_TABLE(extras, E',') AS extras,
+	   order_time,
+	   ROW_NUMBER() OVER()
+FROM customer_orders);
+
+
+ALTER TABLE customer_orders_customized
+ALTER COLUMN extras TYPE INTEGER USING(extras::INTEGER),
+ALTER COLUMN exclusion TYPE INTEGER USING(exclusion::INTEGER);
+```
+
+#### 4.) Generate an order item for each record in the customers_orders table in the format of one of the following:
+Meat Lovers
+Meat Lovers - Exclude Beef
+Meat Lovers - Extra Bacon
+Meat Lovers - Exclude Cheese, Bacon - Extra Mushroom, Peppers
+```sql
+WITH joined_tables AS (
+SELECT COC.customer_id,
+       PN.pizza_name,
+	   COC.unique_number,
+	   STRING_AGG(PT.topping_name, ', ') AS exclusion_name,
+	   STRING_AGG(PT2.topping_name, ', ') AS extras_name
+FROM customer_orders_customized COC
+INNER JOIN pizza_names PN
+ ON COC.pizza_id = PN.pizza_id	
+LEFT JOIN pizza_toppings PT
+ ON COC.exclusion = PT.topping_id 
+LEFT JOIN pizza_toppings PT2
+ ON COC.extras = PT2.topping_id
+GROUP BY COC.customer_id, PN.pizza_name, COC.unique_number
+ORDER BY customer_id ASC)
+
+SELECT CASE WHEN exclusion_name IS NOT NULL
+                 AND extras_name IS NOT NULL 
+			     THEN CONCAT(pizza_name, ' - Exclude ', exclusion_name, ' - Include ', extras_name)
+			WHEN exclusion_name IS NOT NULL
+			     AND extras_name IS NULL
+			     THEN CONCAT(pizza_name, ' - Exclude ', exclusion_name)
+			WHEN exclusion_name IS NULL
+			     AND extras_name IS NOT NULL
+			     THEN CONCAT(pizza_name, ' - Include ', extras_name)
+			ELSE pizza_name END AS item
+FROM joined_tables
+```
+#### 5.) Generate an alphabetically ordered comma separated ingredient list for each pizza order from the customer_orders table and add a 2x in front of any relevant ingredients
+For example: "Meat Lovers: 2xBacon, Beef, ... , Salami"
+```sql
+WITH joined_tables AS (
+	SELECT COC.order_id,
+		   COC.customer_id,
+		   COC.unique_number,
+		   PN.pizza_name,
+		   CAST(REGEXP_SPLIT_TO_TABLE(PR.toppings, E',') AS INT) AS ingredients,
+		   PT.topping_name AS exclusion_name,
+		   PT2.topping_name AS extras_name,
+		   ROW_NUMBER() OVER(PARTITION BY COC.unique_number) AS sub_number
+	FROM customer_orders_customized COC
+	INNER JOIN pizza_names PN
+	 ON COC.pizza_id = PN.pizza_id
+	INNER JOIN pizza_recipes PR
+	 ON COC.pizza_id = PR.pizza_id
+	LEFT JOIN pizza_toppings PT
+	 ON COC.exclusion = PT.topping_id
+	LEFT JOIN pizza_toppings PT2
+	 ON COC.extras = PT2.topping_id
+	ORDER BY order_id, customer_id, unique_number, sub_number, ingredients)
+
+SELECT CONCAT(pizza_name, ': ', ingredients) AS pizza_ordered
+FROM ( 
+	SELECT order_id,
+		   customer_id,
+		   unique_number,
+		   pizza_name,
+		   sub_number,
+		   STRING_AGG(CASE WHEN extras_name = topping_name THEN CONCAT('2x ', topping_name)
+						   WHEN exclusion_name = topping_name THEN NULL
+						   ELSE topping_name END, ', ') AS ingredients
+	FROM joined_tables JT
+	INNER JOIN pizza_toppings PT
+	 ON JT.ingredients = PT.topping_id
+	GROUP BY order_id, customer_id, unique_number, pizza_name, sub_number);
+```
+#### 6.) What is the total quantity of each ingredient used in all delivered pizzas sorted by most frequent first?
+```sql
+WITH joined_tables AS (
+	SELECT PT.topping_name AS exclusion_name,
+		   PT2.topping_name AS extras_name,
+		   CAST(REGEXP_SPLIT_TO_TABLE(PR.toppings, E',') AS INT) AS ingredient
+	FROM customer_orders_customized COC
+	INNER JOIN pizza_recipes PR
+	ON COC.pizza_id = PR.pizza_id
+	LEFT JOIN pizza_toppings PT
+	ON COC.exclusion = PT.topping_id
+	LEFT JOIN pizza_toppings PT2
+	ON COC.extras = PT2.topping_id)
+ 
+SELECT topping_name AS ingredients,
+       SUM(CASE WHEN exclusion_name = topping_name THEN 0
+                WHEN extras_name = topping_name THEN 2
+			    ELSE 1 END) AS used_count
+FROM joined_tables JT
+LEFT JOIN pizza_toppings PT
+ ON JT.ingredient = PT.topping_id
+GROUP BY topping_name
+ORDER BY used_count DESC;
+```
+
+
 
