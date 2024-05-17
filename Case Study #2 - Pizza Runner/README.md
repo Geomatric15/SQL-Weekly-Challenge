@@ -691,6 +691,9 @@ INNER JOIN runner_orders_temp USING(order_id)
 WHERE cancellation IS NULL;
 ```
 **Output:*
+| total_revenue |
+| --- |
+| 138 |
 
 $~$
 
@@ -709,6 +712,9 @@ INNER JOIN runner_orders_temp USING(order_id)
 WHERE cancellation IS NULL;
 ```
 **Output:**
+| total_revenue |
+| --- |
+| 142 |
 
 $~$
 
@@ -735,6 +741,28 @@ VALUES(1, 1, 'successful', 3),
 SELECT * FROM runner_rating;
 ```
 **Output:**
+ runner_id | order_id | delivery_status | rating
+| --- | --- | --- | --- | 
+|         1 |        1 | successful      |      3 |
+|         1 |        2 | successful      |      4 |
+|         1 |        3 | successful      |      3 |
+|         2 |        4 | successful      |      2 |
+|         3 |        5 | successful      |      3 |
+|         3 |        6 | cancelled       | |
+|         2 |        7 | successful      |      5 |
+|         2 |        8 | successful      |      5 |
+|         2 |        9 | cancelled       | |
+|         1 |       10 | successful      |      5 | 
+|         1 |        1 | successful      |      3 |
+|         1 |        2 | successful      |      4 |
+|         1 |        3 | successful      |      3 |
+|         2 |        4 | successful      |      2 |
+|         3 |        5 | successful      |      3 |
+|         3 |        6 | cancelled       | |
+|         2 |        7 | successful      |      5 |
+|         2 |        8 | successful      |      5 |
+|         2 |        9 | cancelled       | |
+|         1 |       10 | successful      |      5 |
 
 $~$
 
@@ -774,6 +802,16 @@ GROUP BY COT.customer_id,
 	     delivery_duration;
 ```
 **Output:**
+ customer_id | order_id | runner_id | rating |     order_time      |     pickup_time     | time_between_order_and_pickup | delivery_duration | average_duration | total_number_of_pizzas
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | 
+|         102 |        3 |         1 |      3 | 2020-01-02 23:51:23 | 2020-01-03 00:12:37 | 00:21:14                      |                20 |               20 |                      4 |
+|         101 |        1 |         1 |      3 | 2020-01-01 18:05:02 | 2020-01-01 18:15:34 | 00:10:32                      |                32 |               32 |                      2 |
+|         104 |        5 |         3 |      3 | 2020-01-08 21:00:29 | 2020-01-08 21:10:57 | 00:10:28                      |                15 |               15 |                      2 |
+|         104 |       10 |         1 |      5 | 2020-01-11 18:34:49 | 2020-01-11 18:50:20 | 00:15:31                      |                10 |               10 |                      4 |
+|         101 |        2 |         1 |      4 | 2020-01-01 19:00:52 | 2020-01-01 19:10:54 | 00:10:02                      |                27 |               27 |                      2 |
+|         103 |        4 |         2 |      2 | 2020-01-04 13:23:46 | 2020-01-04 13:53:03 | 00:29:17                      |                40 |               40 |                      6 |
+|         105 |        7 |         2 |      5 | 2020-01-08 21:20:29 | 2020-01-08 21:30:45 | 00:10:16                      |                25 |               25 |                      2 |
+|         102 |        8 |         2 |      5 | 2020-01-09 23:54:33 | 2020-01-10 00:15:02 | 00:20:29                      |                15 |               15 |                      2 |
 
 $~$
 
@@ -793,6 +831,9 @@ FROM (
 	GROUP BY order_id, runner_id, runner_cut);
 ```
 **Output:**
+| total_profit |
+| --- |
+| 94 |
 
 $~$
 
