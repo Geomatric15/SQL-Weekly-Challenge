@@ -828,7 +828,8 @@ FROM (
 	FROM customer_orders_temp
 	INNER JOIN runner_orders_temp USING(order_id)
 	WHERE distance IS NOT NULL
-	GROUP BY order_id, runner_id, runner_cut);
+	GROUP BY order_id, runner_id, runner_cut
+      );
 ```
 **Output:**
 | total_profit |
