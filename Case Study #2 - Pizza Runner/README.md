@@ -28,8 +28,6 @@ $~$
 > [!NOTE]
 > These questions were answered using postgreSQL
 
-$~$
-
 ### Data Cleaning
 Creating new clean temporary tables from the existing tables.
 
@@ -120,6 +118,8 @@ FROM customer_orders_temp;
 | --- |
 | 14 |
 
+$~$
+
 #### 2.) How many unique customer orders were made?
 ```sql
 SELECT COUNT(DISTINCT order_id) AS unique_ordered
@@ -129,6 +129,8 @@ FROM customer_orders_temp;
 | unique_ordered |
 | --- |
 | 10 |
+
+$~$
 
 #### 3.) How many successful orders were delivered by each runner?
 ```sql
@@ -145,6 +147,8 @@ GROUP BY runner_id;
 | 2 | 3 |
 | 1 | 4 |
 
+$~$
+
 #### 4.) How many of each type of pizza was delivered?
 ```sql
 SELECT CDT.pizza_id,
@@ -160,6 +164,8 @@ GROUP BY CDT.pizza_id;
 | --- | --- |
 | 1 | 9 |
 | 2 | 3 |
+
+$~$
 
 #### 5.) How many Vegetarian and Meatlovers were ordered by each customer?
 ```sql
@@ -182,6 +188,8 @@ ORDER BY customer_id;
 | 104 | 1 | 3 |
 | 105 | 2 | 1 |
 
+$~$
+
 #### 6.) What was the maximum number of pizzas delivered in a single order?
 ```sql
 SELECT order_id,
@@ -198,6 +206,8 @@ LIMIT 1;
  order_id | total
 | --- | --- |
 | 4 | 3 |
+
+$~$
 
 #### 7.) For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
 ```sql
@@ -221,6 +231,8 @@ GROUP BY customer_id;
 | 104 | 1 | 2 |
 | 105 |   | 1 |
 
+$~$
+
 #### 8.) How many pizzas were delivered that had both exclusions and extras?
 ```sql
 SELECT COUNT(*) delivered_pizza_with_both_changes
@@ -235,6 +247,8 @@ WHERE cancellation IS NULL
  | delivered_pizza_with_both_changes |
 | --- |
 | 1 |
+
+$~$
 
 #### 9.) What was the total volume of pizzas ordered for each hour of the day?
 ```sql
@@ -253,6 +267,8 @@ ORDER BY hour ASC;
 | 1 | 19 |
 | 3 | 21 |
 | 3 | 23 |
+
+$~$
 
 #### 10.) What was the volume of orders for each day of the week?
 ```sql
@@ -289,6 +305,8 @@ ORDER BY runner_joined DESC;
 |    1 |             1 |
 |    2 |             1 |
 
+$~$
+
 #### 2.) What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
 ```sql
 SELECT ROUND(AVG(time_diff)) AS average_time
@@ -304,6 +322,8 @@ FROM (
 | average_time |
 | --- |
 | 16 |
+
+$~$
 
 #### 3.) Is there any relationship between the number of pizzas and how long the order takes to prepare?
 ```sql
@@ -322,11 +342,13 @@ GROUP BY number_ordered
 ORDER BY number_ordered;
 ```
 **Output:**
- number_ordered | round
+ number_ordered | prep_time
 | --- | --- |
 | 1 |    12 |
 | 2 |    18 |
 | 3 |    29 |
+
+$~$
 
 #### 4.) What was the average distance travelled for each customer?
 ```sql
@@ -347,6 +369,8 @@ GROUP BY customer_id;
 | 104 | 10.00 |
 | 105 | 25.00 |
 
+$~$
+
 #### 5.) What was the difference between the longest and shortest delivery times for all orders?
 ```sql
 SELECT MAX(duration) - MIN(duration) AS time_difference
@@ -360,6 +384,8 @@ WHERE cancellation IS NULL;
 | --- |
 | 30 |
 
+$~$
+
 #### 6.) What was the average speed for each runner for each delivery and do you notice any trend for these values?
 ```sql
 SELECT runner_id, ROUND(AVG(distance), 2) AS distance, ROUND(AVG(duration), 2) AS duration
@@ -367,12 +393,14 @@ FROM runner_orders_temp
 WHERE cancellation IS NULL
 GROUP BY runner_id;
 ```
-**Output"**
+**Output**
  runner_id | distance | duration
 | --- | --- | --- |
 | 1 | 15.85 | 22.25 |
 | 2 | 23.93 | 26.67 |
 | 3 | 10.00 | 15.00 |
+
+$~$
 
 #### 7.) What is the successful delivery percentage for each runner?
 ```sql
@@ -389,7 +417,7 @@ GROUP BY runner_id;
 | 2 | 75.00 |
 | 1 | 100.00 |
 
-$-$
+$~$
 
 ### C. Ingredient Optimisation
 
@@ -408,6 +436,13 @@ INNER JOIN pizza_toppings PT
  on PR.toppings = PT.topping_id
 GROUP BY pizza_name;
 ```
+**Output:**
+pizza_type |                              ingredients
+| --- | --- |
+| Meatlovers | Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami | 
+| Vegetarian | Cheese, Mushrooms, Onions, Peppers, Tomatoes, Tomato Sauce |
+
+$~$
 
 #### 2.) What was the most commonly added extra?
 ```sql
@@ -422,10 +457,17 @@ GROUP BY topping_name
 ORDER BY times_added DESC
 LIMIT 1;
 ```
+**Output:**
+| topping_name | times_added | 
+| --- | --- |
+| Bacon | 4 |
+
+$~$
+
 #### 3.) What was the most common exclusion?
 ```sql
 SELECT topping_name,
-       COUNT(topping_name) AS times_added
+       COUNT(topping_name) AS times_excluded
 FROM (
     SELECT CAST(REGEXP_SPLIT_TO_TABLE(exclusion, E',') AS INT) AS exclusion
     FROM customer_orders_temp) COT
@@ -435,6 +477,11 @@ GROUP BY topping_name
 ORDER BY times_added DESC
 LIMIT 1;
 ```
+| topping_name | times_excluded | 
+| --- | --- |
+| Cheese | 4 |
+
+$~$
 
 > [!NOTE]
 > We will create a new table for the next following questions.
@@ -444,28 +491,32 @@ CREATE TEMP TABLE customer_orders_customized AS
 SELECT order_id,
        customer_id,
        pizza_id,
-	   CASE WHEN exclusion LIKE 'null'
-	          OR exclusion LIKE '' THEN NULL
-			ELSE exclusion END AS exclusion,
-	   CASE WHEN extras LIKE 'null' 
-	          OR extras LIKE '' THEN NULL
-			ELSE extras END AS extras,
-	   order_time
+       CASE WHEN exclusion LIKE 'null'
+                 OR exclusion LIKE '' THEN NULL
+            ELSE exclusion END AS exclusion,
+       CASE WHEN extras LIKE 'null' 
+                 OR extras LIKE '' THEN NULL
+            ELSE extras END AS extras,
+       order_time,
+       unique_number
 FROM (
-SELECT order_id,
-       customer_id,
-	   pizza_id,
-       REGEXP_SPLIT_TO_TABLE(exclusion, E',') AS exclusion,
-       REGEXP_SPLIT_TO_TABLE(extras, E',') AS extras,
-	   order_time,
-	   ROW_NUMBER() OVER()
-FROM customer_orders);
+      SELECT order_id,
+             customer_id,
+             pizza_id,
+             REGEXP_SPLIT_TO_TABLE(exclusion, E',') AS exclusion,
+             REGEXP_SPLIT_TO_TABLE(extras, E',') AS extras,
+             order_time,
+	     ROW_NUMBER() OVER() AS unique_number
+       FROM customer_orders
+      );
 
 
 ALTER TABLE customer_orders_customized
 ALTER COLUMN extras TYPE INTEGER USING(extras::INTEGER),
 ALTER COLUMN exclusion TYPE INTEGER USING(exclusion::INTEGER);
 ```
+
+$~$
 
 #### 4.) Generate an order item for each record in the customers_orders table in the format of one of the following:
 Meat Lovers
@@ -476,9 +527,9 @@ Meat Lovers - Exclude Cheese, Bacon - Extra Mushroom, Peppers
 WITH joined_tables AS (
 SELECT COC.customer_id,
        PN.pizza_name,
-	   COC.unique_number,
-	   STRING_AGG(PT.topping_name, ', ') AS exclusion_name,
-	   STRING_AGG(PT2.topping_name, ', ') AS extras_name
+       COC.unique_number,
+       STRING_AGG(PT.topping_name, ', ') AS exclusion_name,
+       STRING_AGG(PT2.topping_name, ', ') AS extras_name
 FROM customer_orders_customized COC
 INNER JOIN pizza_names PN
  ON COC.pizza_id = PN.pizza_id	
@@ -487,58 +538,105 @@ LEFT JOIN pizza_toppings PT
 LEFT JOIN pizza_toppings PT2
  ON COC.extras = PT2.topping_id
 GROUP BY COC.customer_id, PN.pizza_name, COC.unique_number
-ORDER BY customer_id ASC)
+ORDER BY customer_id ASC
+)
 
 SELECT CASE WHEN exclusion_name IS NOT NULL
                  AND extras_name IS NOT NULL 
-			     THEN CONCAT(pizza_name, ' - Exclude ', exclusion_name, ' - Include ', extras_name)
-			WHEN exclusion_name IS NOT NULL
-			     AND extras_name IS NULL
-			     THEN CONCAT(pizza_name, ' - Exclude ', exclusion_name)
-			WHEN exclusion_name IS NULL
-			     AND extras_name IS NOT NULL
-			     THEN CONCAT(pizza_name, ' - Include ', extras_name)
-			ELSE pizza_name END AS item
-FROM joined_tables
+                THEN CONCAT(pizza_name, ' - Exclude ', exclusion_name, ' - Include ', extras_name)
+            WHEN exclusion_name IS NOT NULL
+                 AND extras_name IS NULL
+                THEN CONCAT(pizza_name, ' - Exclude ', exclusion_name)
+            WHEN exclusion_name IS NULL
+                 AND extras_name IS NOT NULL
+                THEN CONCAT(pizza_name, ' - Include ', extras_name)
+            ELSE pizza_name END AS item
+FROM joined_tables;
 ```
+**Output:**
+                               | item |
+| ------------------------------------------------------------------- |
+| Meatlovers |
+| Meatlovers |
+| Vegetarian |
+| Meatlovers |
+| Meatlovers |
+| Vegetarian |
+| Meatlovers - Exclude Cheese |
+| Meatlovers - Exclude Cheese |
+| Meatlovers - Exclude Cheese - Include Bacon, Chicken |
+| Vegetarian - Exclude Cheese |
+| Meatlovers - Include Bacon |
+| Meatlovers |
+| Meatlovers - Exclude BBQ Sauce, Mushrooms - Include Bacon, Cheese |
+| Vegetarian - Include Bacon |
+
+$~$
+
 #### 5.) Generate an alphabetically ordered comma separated ingredient list for each pizza order from the customer_orders table and add a 2x in front of any relevant ingredients
 For example: "Meat Lovers: 2xBacon, Beef, ... , Salami"
 ```sql
 WITH joined_tables AS (
-	SELECT COC.order_id,
-		   COC.customer_id,
-		   COC.unique_number,
-		   PN.pizza_name,
-		   CAST(REGEXP_SPLIT_TO_TABLE(PR.toppings, E',') AS INT) AS ingredients,
-		   PT.topping_name AS exclusion_name,
-		   PT2.topping_name AS extras_name,
-		   ROW_NUMBER() OVER(PARTITION BY COC.unique_number) AS sub_number
-	FROM customer_orders_customized COC
-	INNER JOIN pizza_names PN
-	 ON COC.pizza_id = PN.pizza_id
-	INNER JOIN pizza_recipes PR
-	 ON COC.pizza_id = PR.pizza_id
-	LEFT JOIN pizza_toppings PT
-	 ON COC.exclusion = PT.topping_id
-	LEFT JOIN pizza_toppings PT2
-	 ON COC.extras = PT2.topping_id
-	ORDER BY order_id, customer_id, unique_number, sub_number, ingredients)
+SELECT COC.order_id,
+	   COC.customer_id,
+	   COC.unique_number,
+	   PN.pizza_name,
+	   CAST(REGEXP_SPLIT_TO_TABLE(PR.toppings, E',') AS INT) AS ingredients,
+	   PT.topping_name AS exclusion_name,
+	   PT2.topping_name AS extras_name,
+	   ROW_NUMBER() OVER(PARTITION BY COC.unique_number) AS sub_number
+FROM customer_orders_customized COC
+INNER JOIN pizza_names PN
+ ON COC.pizza_id = PN.pizza_id
+INNER JOIN pizza_recipes PR
+ ON COC.pizza_id = PR.pizza_id
+LEFT JOIN pizza_toppings PT
+ ON COC.exclusion = PT.topping_id
+LEFT JOIN pizza_toppings PT2
+ ON COC.extras = PT2.topping_id
+ORDER BY order_id, customer_id, unique_number, sub_number, ingredients
+),
+
+     aggregated_table AS (
+SELECT order_id,
+       customer_id,
+       unique_number,
+       pizza_name,
+       sub_number,
+       STRING_AGG(CASE WHEN extras_name = topping_name THEN CONCAT('2x ', topping_name)
+		       WHEN exclusion_name = topping_name THEN NULL
+		       ELSE topping_name END, ', ') AS ingredients
+FROM joined_tables JT
+INNER JOIN pizza_toppings PT
+ON JT.ingredients = PT.topping_id
+GROUP BY order_id, customer_id, unique_number, pizza_name, sub_number
+)
 
 SELECT CONCAT(pizza_name, ': ', ingredients) AS pizza_ordered
-FROM ( 
-	SELECT order_id,
-		   customer_id,
-		   unique_number,
-		   pizza_name,
-		   sub_number,
-		   STRING_AGG(CASE WHEN extras_name = topping_name THEN CONCAT('2x ', topping_name)
-						   WHEN exclusion_name = topping_name THEN NULL
-						   ELSE topping_name END, ', ') AS ingredients
-	FROM joined_tables JT
-	INNER JOIN pizza_toppings PT
-	 ON JT.ingredients = PT.topping_id
-	GROUP BY order_id, customer_id, unique_number, pizza_name, sub_number);
+FROM aggregated_table;
 ```
+**Output:**
+                                   | pizza_ordered |
+|--------------------------------------------------------------------------------------|
+| Meatlovers: Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami |
+| Meatlovers: Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami |
+| Meatlovers: Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami |
+| Vegetarian: Cheese, Mushrooms, Onions, Peppers, Tomatoes, Tomato Sauce | 
+| Meatlovers: Bacon, BBQ Sauce, Beef, Chicken, Mushrooms, Pepperoni, Salami | 
+| Meatlovers: Bacon, BBQ Sauce, Beef, Chicken, Mushrooms, Pepperoni, Salami | 
+| Vegetarian: Mushrooms, Onions, Peppers, Tomatoes, Tomato Sauce | 
+| Meatlovers: 2x Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami | 
+| Vegetarian: Cheese, Mushrooms, Onions, Peppers, Tomatoes, Tomato Sauce | 
+| Vegetarian: Cheese, Mushrooms, Onions, Peppers, Tomatoes, Tomato Sauce | 
+| Meatlovers: Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami | 
+| Meatlovers: Bacon, BBQ Sauce, Beef, Cheese, 2x Chicken, Mushrooms, Pepperoni, Salami |
+| Meatlovers: 2x Bacon, BBQ Sauce, Beef, Chicken, Mushrooms, Pepperoni, Salami |
+| Meatlovers: Bacon, BBQ Sauce, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami | 
+| Meatlovers: 2x Bacon, Beef, Cheese, Chicken, Mushrooms, Pepperoni, Salami | 
+| Meatlovers: Bacon, BBQ Sauce, Beef, 2x Cheese, Chicken, Pepperoni, Salami |
+
+$~$
+
 #### 6.) What is the total quantity of each ingredient used in all delivered pizzas sorted by most frequent first?
 ```sql
 WITH joined_tables AS (
@@ -563,6 +661,21 @@ LEFT JOIN pizza_toppings PT
 GROUP BY topping_name
 ORDER BY used_count DESC;
 ```
+**Output:**
+ ingredients  | used_count
+| --- | --- |
+| Bacon        |         15 |
+| Mushrooms    |         15 |
+| Chicken      |         13 | 
+| Cheese       |         13 |
+| Pepperoni    |         12 | 
+| Salami       |         12 |
+| Beef         |         12 | 
+| BBQ Sauce    |         11 |
+| Tomato Sauce |          4 |
+| Onions       |          4 | 
+| Tomatoes     |          4 |
+| Peppers      |          4 |
 
 
 
