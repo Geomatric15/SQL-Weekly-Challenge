@@ -35,8 +35,6 @@ $~$
 > [!NOTE]
 > These questions were answered using postgreSQL
 
-$~$
-
 #### 1.) What is the total amount each customer spent at the restaurant?
 ```sql
 SELECT sales.customer_id AS customer,
