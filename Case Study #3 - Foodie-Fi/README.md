@@ -34,6 +34,39 @@ $~$
 Based off the 8 sample customers provided in the sample from the subscriptions table, write a brief description about each customer’s onboarding journey.
 
 Try to keep it as short as possible - you may also want to run some sort of join to make your explanations a bit easier!
+```sql
+SELECT S.customer_id,
+       S.plan_id,
+	   S.start_date,
+	   P.plan_name,
+	   P.price
+FROM subscriptions S
+LEFT JOIN plans P
+ ON S.plan_id = P.plan_id
+WHERE customer_id IN (1, 2, 11, 13, 15, 16, 18, 19);
+```
+ customer_id | plan_id | start_date |   plan_name   | price
+| --- | --- | --- | --- | --- |
+|           1 |       0 | 2020-08-01 | trial         |     0  |
+|           1 |       1 | 2020-08-08 | basic monthly |  9.90 |
+|           2 |       0 | 2020-09-20 | trial         |     0 |
+|           2 |       3 | 2020-09-27 | pro annual    |   199 |
+|          11 |       0 | 2020-11-19 | trial         |     0 |
+|          11 |       4 | 2020-11-26 | churn         | |
+|          13 |       0 | 2020-12-15 | trial         |     0 |
+|          13 |       1 | 2020-12-22 | basic monthly |  9.90 |
+|          13 |       2 | 2021-03-29 | pro monthly   | 19.90 |
+|          15 |       0 | 2020-03-17 | trial         |     0 |
+|          15 |       2 | 2020-03-24 | pro monthly   | 19.90 |
+|          15 |       4 | 2020-04-29 | churn         | |
+|          16 |       0 | 2020-05-31 | trial         |     0 |
+|          16 |       1 | 2020-06-07 | basic monthly |  9.90 |
+|          16 |       3 | 2020-10-21 | pro annual    |   199 |
+|          18 |       0 | 2020-07-06 | trial         |     0 |
+|          18 |       2 | 2020-07-13 | pro monthly   | 19.90 | 
+|          19 |       0 | 2020-06-22 | trial         |     0 |
+|          19 |       2 | 2020-06-29 | pro monthly   | 19.90 |
+|          19 |       3 | 2020-08-29 | pro annual    |   199 |
 
 $~$
 
@@ -222,6 +255,8 @@ WHERE A.upgraded_date IS NOT NULL
 | --- | 
 | 104.62 | 
 
+$~$
+
 #### 10.) Can you further breakdown this average value into 30 day periods (i.e. 0-30 days, 31-60 days etc)
 ```sql
 WITH updated_table AS (
@@ -382,3 +417,6 @@ ORDER BY customer_id, plan_id;
 |           3 |       1 | basic monthly | 2020-12-20   |   9.90 |            12 |
 |           4 |       1 | basic monthly | 2020-01-24   |   9.90 |             1 |
 |           4 |       1 | basic monthly | 2020-02-24   |   9.90 |             2 |
+
+## D. Outside The Box Questions
+
