@@ -418,5 +418,7 @@ ORDER BY customer_id, plan_id;
 |           4 |       1 | basic monthly | 2020-01-24   |   9.90 |             1 |
 |           4 |       1 | basic monthly | 2020-02-24   |   9.90 |             2 |
 
+$~$
+
 ## D. Outside The Box Questions
 
